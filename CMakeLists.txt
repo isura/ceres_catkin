@@ -22,9 +22,10 @@ ExternalProject_Add(ceres_src
   #DEPENDS dependency_hack  # This is broken, so we hope that suitesparse is build by the time ceres searches for it.
   DOWNLOAD_COMMAND ""
   CONFIGURE_COMMAND cp ${PROJECT_SOURCE_DIR}/make.sh ./
-  BUILD_COMMAND sh make.sh ${CATKIN_DEVEL_PREFIX}
+  BUILD_COMMAND sh make.sh ${CATKIN_DEVEL_PREFIX} ${PROJECT_SOURCE_DIR} ${suitesparse_DEVEL_PREFIX}/share/suitesparse/cmake
   INSTALL_COMMAND ""
 )
+
 
 catkin_package(
     DEPENDS ${catkin_EXPORTED_TARGETS} ceres_src eigen

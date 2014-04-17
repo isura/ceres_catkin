@@ -3,6 +3,8 @@
 set -e
 
 INSTALL_SPACE=$1
+SRC_DIR=$2
+SUITESPARSE_MODULE_PATH=$3
 
 PACKAGE_DIR=$(pwd)
 cd $PACKAGE_DIR
@@ -53,6 +55,20 @@ fi
 
 echo "### Building Google ceres ###"
 
+echo "### Forcing catkin suitesparse ###"
+# Remove the ceres suitesparse script
+rm -f $PACKAGE_DIR/$CERES_PATH/cmake/FindSuiteSparse.cmake
+# The catkin dep of suitesparse is all lowercase. Patch the ceres makefile to
+# look for this dependency
+sed -i 's/SuiteSparse/suitesparse/g' $PACKAGE_DIR/$CERES_PATH/CMakeLists.txt
+sed -i 's/SUITESPARSE_FOUND/suitesparse_FOUND/g' $PACKAGE_DIR/$CERES_PATH/CMakeLists.txt
+sed -i 's/SUITESPARSE_INCLUDE_DIRS/suitesparse_INCLUDE_DIRS/g' $PACKAGE_DIR/$CERES_PATH/CMakeLists.txt
+sed -i 's/SuiteSparse/suitesparse/g' $PACKAGE_DIR/$CERES_PATH/internal/ceres/CMakeLists.txt
+sed -i 's/SUITESPARSE_FOUND/suitesparse_FOUND/g' $PACKAGE_DIR/$CERES_PATH/internal/ceres/CMakeLists.txt
+sed -i 's/SUITESPARSE_INCLUDE_DIRS/suitesparse_INCLUDE_DIRS/g' $PACKAGE_DIR/$CERES_PATH/internal/ceres/CMakeLists.txt
+sed -i 's/SUITESPARSE_LIBRARIES/suitesparse_LIBRARIES/g' $PACKAGE_DIR/$CERES_PATH/internal/ceres/CMakeLists.txt
+sed -i 's/SUITESPARSE_LIBRARIES/suitesparse_LIBRARIES/g' $PACKAGE_DIR/$CERES_PATH/examples/CMakeLists.txt
+
 echo "### Patching ceres cmake ###"
 # Remove -Werror from cmake lists as clang outputs warnings for unused include paths.
 sed -i 's/-Werror/-Wall/g' $PACKAGE_DIR/$CERES_PATH/CMakeLists.txt
@@ -65,6 +81,8 @@ cmake -DCMAKE_CXX_FLAGS=-fPIC -DGFLAGS=ON -DGFLAGS_LIBRARY=$PACKAGE_DIR/$GFLAGS_
       -DGFLAGS_INCLUDE_DIR=$PACKAGE_DIR/$GFLAGS_PATH/src/ -DGLOG_INCLUDE_DIR=$PACKAGE_DIR/$GLOG_PATH/src/ \
       -DGLOG_LIBRARY=$PACKAGE_DIR/$GLOG_PATH/.libs/libglog.a -DCMAKE_INSTALL_PREFIX=$INSTALL_SPACE \
       -DBUILD_SHARED_LIBS=ON -DBUILD_DOCUMENTATION=OFF -DCMAKE_VERBOSE_MAKEFILE=ON \
-      $PACKAGE_DIR/$CERES_PATH/ && make -j8 && make install -j8 -l8
+      -Dsuitesparse_DIR=$SUITESPARSE_MODULE_PATH \
+       $PACKAGE_DIR/$CERES_PATH/ && make -j8 && make install -j8 -l8
+
 
 
